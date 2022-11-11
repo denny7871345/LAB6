@@ -9,34 +9,53 @@ canvas {
 }
 </style>
 </head>
-<body onload="startGame()">
+<body onload="startGame()" onload="doit()">
 <script>
 
 var redGamePiece, blueGamePiece, yellowGamePiece;
 
+
 function startGame() {
     //WTF//
-    redGamePiece = new component(75, 75, "red", 10, 10,15,1,1);
-    yellowGamePiece = new component(75, 75, "yellow", 50, 60,15,2,1);    
-    blueGamePiece = new component(75, 75, "green", 10, 220,15,15,0);
+    redGamePiece = new component(75, 75, "red", 10, 10,1,1,1);
+    yellowGamePiece = new component(75, 75, "yellow", 50, 60,1,2,1);    
+    blueGamePiece = new component(75, 75, "green", 10, 220,1,1,0);
     myGameArea.start();
+    
+    
 }
-
 var myGameArea = {
     canvas : document.createElement("canvas"),
     start : function() {
-        this.canvas.width = 480;
+        this.canvas.width = 480; 
         this.canvas.height = 270;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.interval = setInterval(updateGameArea, 20);
+        window.addEventListener('mousedown', function (e) {
+            myGameArea.x = e.pageX;
+            myGameArea.y = e.pageY;
+        })
+        window.addEventListener('mouseup', function (e) {
+            myGameArea.x = false;
+            myGameArea.y = false;
+        })
+        window.addEventListener('touchstart', function (e) {
+            myGameArea.x = e.pageX;
+            myGameArea.y = e.pageY;
+        })
+        window.addEventListener('touchend', function (e) {
+            myGameArea.x = false;
+            myGameArea.y = false;
+        })
     },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
+    
 }
 
-function component(width, height, color, x, y,movex,movey,f) {
+function component(width, height, color, x, y,movex,movey,f,move) {
     this.f = f;
     this.movex = movex;
     this.movey = movey;
@@ -44,40 +63,88 @@ function component(width, height, color, x, y,movex,movey,f) {
     this.height = height;
     this.x = x;
     this.y = y;    
+    move = 0;
+    this.SOM = 0;
     this.update = function(){
         ctx = myGameArea.context;
         ctx.fillStyle = color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
+    }
+    this.clicked = function() {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var clicked = true;
+        if ((mybottom < myGameArea.y) || (mytop > myGameArea.y) || (myright < myGameArea.x) || (myleft > myGameArea.x)) {
+            clicked = false;
+        }
+        return clicked;
     }
 }
 
 function updateGameArea() {
-    myGameArea.clear();
-    redGamePiece.x += redGamePiece.movex;
-    if(redGamePiece.x>=405) redGamePiece.movex = redGamePiece.movex * -1;
-    if(redGamePiece.x<=0) redGamePiece.movex = redGamePiece.movex * -1;
-    yellowGamePiece.x += yellowGamePiece.movex;    
-    yellowGamePiece.y += yellowGamePiece.movey;   
-    if(yellowGamePiece.x>=405) yellowGamePiece.movex = yellowGamePiece.movex * -1;
-    if(yellowGamePiece.x<=0) yellowGamePiece.movex = yellowGamePiece.movex * -1;
-    if(yellowGamePiece.y>=195) yellowGamePiece.movey = yellowGamePiece.movey * -1;
-    if(yellowGamePiece.y<=0) yellowGamePiece.movey = yellowGamePiece.movey * -1;     
-    blueGamePiece.x +=  blueGamePiece.movex;        
-    blueGamePiece.y -= blueGamePiece.movey;     
-    if(blueGamePiece.x>=405) blueGamePiece.movex = blueGamePiece.movex * -1;
-    if(blueGamePiece.x<=0) blueGamePiece.movex = blueGamePiece.movex * -1;
-    if(blueGamePiece.y>=195 && blueGamePiece.f==1 ) {
-        blueGamePiece.movey = blueGamePiece.movey * -1;
-        blueGamePiece.f = 0;
+        myGameArea.clear();
+        if(redGamePiece.SOM){
+            redGamePiece.x += redGamePiece.movex;
+            if(redGamePiece.x>=405) redGamePiece.movex = redGamePiece.movex * -1;
+            if(redGamePiece.x<=0) redGamePiece.movex = redGamePiece.movex * -1;
+        }
+        if(yellowGamePiece.SOM){
+            yellowGamePiece.x += yellowGamePiece.movex;    
+            yellowGamePiece.y += yellowGamePiece.movey;   
+            if(yellowGamePiece.x>=405) yellowGamePiece.movex = yellowGamePiece.movex * -1;
+            if(yellowGamePiece.x<=0) yellowGamePiece.movex = yellowGamePiece.movex * -1;
+            if(yellowGamePiece.y>=195) yellowGamePiece.movey = yellowGamePiece.movey * -1;
+            if(yellowGamePiece.y<=0) yellowGamePiece.movey = yellowGamePiece.movey * -1;     
+        }
+        if(blueGamePiece.SOM){
+            blueGamePiece.x +=  blueGamePiece.movex;        
+            blueGamePiece.y -= blueGamePiece.movey;     
+            if(blueGamePiece.x>=405) blueGamePiece.movex = blueGamePiece.movex * -1;
+            if(blueGamePiece.x<=0) blueGamePiece.movex = blueGamePiece.movex * -1;
+            if(blueGamePiece.y>=195 && blueGamePiece.f==1 ) {
+                blueGamePiece.movey = blueGamePiece.movey * -1;
+                blueGamePiece.f = 0;
+            }
+            if(blueGamePiece.y<=150) blueGamePiece.f = 1;
+            if(blueGamePiece.y<=0) blueGamePiece.movey = blueGamePiece.movey * -1;
+        }
+        redGamePiece.update();
+        yellowGamePiece.update();        
+        blueGamePiece.update();
+        if (myGameArea.x && myGameArea.y) {
+            if (redGamePiece.clicked()) {
+                redGamePiece.SOM = 1;
+            }
+            if (blueGamePiece.clicked()) {
+                blueGamePiece.SOM = 1;
+            }
+            if (yellowGamePiece.clicked()) {
+                yellowGamePiece.SOM = 1;
+            }}
+} 
+function stop(){
+        redGamePiece.SOM = 0;
+        yellowGamePiece.SOM = 0;
+        blueGamePiece.SOM = 0;
     }
-    if(blueGamePiece.y<=150) blueGamePiece.f = 1;
-    if(blueGamePiece.y<=0) blueGamePiece.movey = blueGamePiece.movey * -1;       
-    redGamePiece.update();
-    yellowGamePiece.update();        
-    blueGamePiece.update();
+function move(){
+        redGamePiece.SOM = 1;
+        yellowGamePiece.SOM = 1;
+        blueGamePiece.SOM = 1; 
+    }
+function allreset(){
+    redGamePiece = new component(75, 75, "red", 10, 10,1,1,1);
+    yellowGamePiece = new component(75, 75, "yellow", 50, 60,1,2,1);    
+    blueGamePiece = new component(75, 75, "green", 10, 220,1,1,0);
 }
+
+
 </script>
 <p>The three components moves by changing the x- and y-coordinates on every update.</p>
+<button onclick="move()" >start</button>
+<button onclick="stop()" >stop</button>
+<button onclick="allreset()" >reset</button>
 </body>
 </html>
